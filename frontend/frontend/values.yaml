@@ -1,0 +1,107 @@
+imagePullSecrets: [] # Optional registry pull secrets
+nameOverride: "" # Override chart name
+fullnameOverride: "" # Override full release name
+
+serviceAccount:
+  create: true # Create dedicated service account
+  automount: true # Mount API credentials into pods
+  annotations: {} # Extra SA annotations placeholder
+  name: "" # Custom SA name override
+replicaCount: 1 # Default replica count
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/frontend # Registry path for frontend image
+  pullPolicy: Always # Always pull to ensure freshest build
+  tag: "latest" # Default tag overridden by CI
+  #tag: "v0-amd64" # Example static tag
+
+service:
+  type: ClusterIP # Internal service type
+  port: 80 # Service port exposed inside cluster
+  name: http # Named port for probes/routes
+  targetPort: 8080 # Container port targeted by service
+  containerPort: 8080 # Pod container port
+
+ingress:
+  enabled: true # Enable ingress for public frontend
+  className: "nginx" # Use nginx ingress controller
+  annotations: {} # Additional ingress annotations placeholder
+  hosts:
+    - host: 130.193.59.73.nip.io # Hostname for ingress
+      paths:
+        - path: / # Route all paths to frontend
+          pathType: ImplementationSpecific # Let controller decide matching
+  tls: [] # TLS configuration placeholder
+
+env:
+  - name: PORT # Container listen port
+    value: "8080" # Matches service targetPort
+  - name: PRODUCT_CATALOG_SERVICE_ADDR # Dependency: catalog service
+    value: "productcatalogservice:3550" # Service DNS + port
+  - name: CURRENCY_SERVICE_ADDR # Dependency: currency service
+    value: "currencyservice:7000" # Service DNS + port
+  - name: CART_SERVICE_ADDR # Dependency: cart service
+    value: "cartservice:7070" # Service DNS + port
+  - name: RECOMMENDATION_SERVICE_ADDR # Dependency: recommendation service
+    value: "recommendationservice:8080" # Service DNS + port
+  - name: SHIPPING_SERVICE_ADDR # Dependency: shipping service
+    value: "shippingservice:50051" # Service DNS + port
+  - name: CHECKOUT_SERVICE_ADDR # Dependency: checkout service
+    value: "checkoutservice:5050" # Service DNS + port
+  - name: AD_SERVICE_ADDR # Dependency: ad service
+    value: "adservice:9555" # Service DNS + port
+  - name: SHOPPING_ASSISTANT_SERVICE_ADDR # Dependency: AI shopping assistant
+    value: "shoppingassistantservice:5050" # Service DNS + port
+  - name: ENV_PLATFORM # Platform identifier used by frontend
+    value: "local" # Default to local mode
+  - name: CYMBAL_BRANDING # Toggle Cymbal branding banner
+    value: "false" # Disabled by default
+  - name: ENABLE_ASSISTANT # Toggle shopping assistant feature
+    value: "false" # Disabled by default
+  - name: ENABLE_SINGLE_SHARED_SESSION # Toggle shared session mode
+    value: "false" # Disabled by default
+resources: {} # Resource requests/limits intentionally empty for flexibility
+podAnnotations: {} # Optional pod annotations
+podLabels:
+  app: frontend # Selector/observability label
+
+podSecurityContext: {} # Pod security context placeholder
+
+securityContext: {} # Container security context placeholder
+httpRoute:
+  enabled: false # Gateway API HTTPRoute disabled
+  annotations: {} # HTTPRoute annotations placeholder
+  parentRefs:
+  - name: gateway # Gateway reference
+    sectionName: http # HTTP listener section
+  hostnames:
+  - chart-example.local # Example hostname
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix # Prefix path match
+        value: /headers # Example route path
+
+livenessProbe:
+  httpGet:
+    path: / # Health endpoint path
+    port: http # Named port reference
+readinessProbe:
+  httpGet:
+    path: / # Ready endpoint path
+    port: http
+
+autoscaling:
+  enabled: false # HPA disabled; rely on replicaCount
+  minReplicas: 1 # Minimum replicas if HPA enabled
+  maxReplicas: 100 # Maximum replicas if HPA enabled
+  targetCPUUtilizationPercentage: 80 # CPU target for scaling
+
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra mounts placeholder
+
+nodeSelector: {} # Optional node selection rules
+
+tolerations: [] # Optional tolerations
+
+affinity: {} # Affinity/anti-affinity rules placeholder

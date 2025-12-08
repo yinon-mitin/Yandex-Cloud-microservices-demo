@@ -1,0 +1,27 @@
+replicaCount: 1 # Default number of pods to run
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/cartservice # Registry image path
+  pullPolicy: IfNotPresent # Only pull when image missing on node
+  tag: "latest" # Tag overridden by CI during deploy
+
+service:
+  type: ClusterIP # Internal-only service exposure
+  port: 7070 # Cart gRPC/HTTP port
+
+env:
+  - name: PORT # Port environment variable used by the app
+    value: "7070" # Matches service port
+  - name: REDIS_ADDR # External dependency endpoint
+    value: "redis-cart:6379" # Redis service and port for cart storage
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU reserved
+    memory: 128Mi # Minimum memory reserved
+  limits:
+    cpu: 200m # Max CPU allowed
+    memory: 256Mi # Max memory allowed
+
+podLabels:
+  app: cartservice # Selector label for this workload

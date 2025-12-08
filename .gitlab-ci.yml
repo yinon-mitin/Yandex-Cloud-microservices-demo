@@ -1,0 +1,177 @@
+stages:
+  - build # Build container images for each microservice
+  - deploy # Provision infra and deploy via Helm
+
+variables:
+  REGISTRY: "cr.yandex/$REGISTRY_ID" # Base registry to push images to
+  IMAGE_TAG: "${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}" # Tag images with branch and SHA
+  GIT_STRATEGY: clone # Always clone full repo
+  GIT_DEPTH: "0"      # Just in case, to drag out the whole story/refs
+  ZONE: "ru-central1-b" # Default availability zone for YC resources
+  NODE_COUNT: "2" # Default worker node count for k8s cluster
+
+default:
+  image: alpine:latest # Lightweight base image for pipeline steps
+  before_script:
+    - apk add --no-cache docker-cli docker-cli-buildx # Install Docker client and buildx plugin
+    - export DOCKER_BUILDKIT=1 # Enable BuildKit for reproducible builds
+    - echo "$YC_SA_KEY_JSON_B64" | base64 -d | docker login cr.yandex -u json_key --password-stdin # Auth to YC container registry
+    # - yc config set token "$YC_OAUTH_TOKEN"
+    # - yc config set folder-id "$YC_FOLDER_ID"
+    # - yc container registry configure-docker
+
+.build_template: &build_template
+  stage: build # All derived jobs run in build stage
+  script:
+    - echo "Build $SERVICE_NAME" # Log current service name
+    - docker buildx create --use --name ci-builder || docker buildx use ci-builder # Create or reuse buildx builder
+    - |
+      # Build and push the service image for amd64
+      docker buildx build \
+        --platform linux/amd64 \
+        -t "$REGISTRY/$SERVICE_NAME:$IMAGE_TAG" \
+        -t "$REGISTRY/$SERVICE_NAME:latest" \
+        "$BUILD_PATH" \
+        --push
+  tags: [ docker ] # Use runners with Docker-in-Docker support
+  retry: 2 # Retry build jobs twice on failure
+
+build_adservice:
+  <<: *build_template # Reuse shared build template
+  variables:
+    SERVICE_NAME: "adservice" # Image/repo name
+    BUILD_PATH: "adservice" # Docker context path
+
+build_cartservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "cartservice" # Cart service image
+    BUILD_PATH: "cartservice/src" # Build context contains source folder
+
+build_checkoutservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "checkoutservice" # Checkout orchestrator image
+    BUILD_PATH: "checkoutservice" # Build context
+
+build_currencyservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "currencyservice" # Currency converter image
+    BUILD_PATH: "currencyservice"
+
+build_emailservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "emailservice" # Email sender image
+    BUILD_PATH: "emailservice"
+
+build_frontend:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "frontend" # Web UI image
+    BUILD_PATH: "frontend"
+
+build_loadgenerator:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "loadgenerator" # Locust load driver image
+    BUILD_PATH: "loadgenerator"
+
+build_paymentservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "paymentservice" # Payment stub image
+    BUILD_PATH: "paymentservice"
+
+build_productcatalogservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "productcatalogservice" # Catalog API image
+    BUILD_PATH: "productcatalogservice"
+
+build_recommendationservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "recommendationservice" # Recommendation engine image
+    BUILD_PATH: "recommendationservice"
+
+build_shippingservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "shippingservice" # Shipping quote image
+    BUILD_PATH: "shippingservice"
+
+build_shoppingassistantservice:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: "shoppingassistantservice" # AI shopping assistant image
+    BUILD_PATH: "shoppingassistantservice"
+
+
+deploy:
+  stage: deploy # Run after all build jobs succeed
+  script:
+    - apk add --no-cache bash curl helm kubectl unzip # Install CLI tooling required for deploy
+
+    # Terraform install
+    - wget https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip # Download pinned Terraform binary
+    - unzip terraform_1.9.8_linux_amd64.zip # Unpack archive
+    - mv terraform /usr/local/bin/ # Make terraform available in PATH
+
+    # YC CLI
+    - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash # Install YC CLI
+    - export PATH="$HOME/yandex-cloud/bin:$PATH" # Add YC CLI to PATH
+
+    # Auth to YC
+    - echo "$YC_SA_KEY_JSON_B64" | base64 -d > /tmp/yc-sa-key.json # Decode service account key to file
+    - yc config set service-account-key /tmp/yc-sa-key.json # Configure YC CLI auth
+    - yc config set cloud-id "$YC_CLOUD_ID" # Target cloud ID
+    - yc config set folder-id "$YC_FOLDER_ID" # Target folder ID
+
+    # Passing secrets from GitLab variables to Terraform via TF_VAR_*
+    - export TF_VAR_cloud_id="$YC_CLOUD_ID" # Pass cloud ID into Terraform
+    - export TF_VAR_folder_id="$YC_FOLDER_ID" # Pass folder ID into Terraform
+    # - export TF_VAR_yandex_token="${YC_OAUTH_TOKEN:-}"
+    - export TF_VAR_service_account_key_file="/tmp/yc-sa-key.json" # Point provider to SA key
+    - export TF_VAR_zone="${ZONE:-ru-central1-b}" # Default zone override
+    - export TF_VAR_node_count="${NODE_COUNT:-2}" # Default worker count override
+
+    # Terraform
+    - export AWS_ACCESS_KEY_ID="$S3_ACCESS_KEY" # Credentials for state backend
+    - export AWS_SECRET_ACCESS_KEY="$S3_SECRET_KEY" # Secret for state backend
+    - cd infra/tf/environment/production # Move into Terraform environment folder
+    - terraform init # Initialize backend and providers
+    - terraform apply -auto-approve # Provision/upgrade infrastructure
+    - export CLUSTER_ID=$(terraform output -raw cluster_id) # Получаем CLUSTER_ID
+    - echo "Using CLUSTER_ID=$CLUSTER_ID" # Log cluster ID for debugging
+    - cd $CI_PROJECT_DIR # Return to repo root
+
+    # Accessing the cluster
+    - yc managed-kubernetes cluster get-credentials --id "$CLUSTER_ID" --external --force # Configure kubectl context
+
+    # Create the shopping namespace if it does not already exist
+    - kubectl get ns shopping || kubectl create namespace shopping # Ensure target namespace exists
+
+    # Helm Deploy
+    - helm dependency update shopping # Pull/refresh local chart dependencies
+    - |
+      # Upgrade or install the umbrella chart with freshly built image tags
+      helm upgrade shopping ./shopping --install \
+        -f shopping/values.yaml \
+        --namespace shopping \
+        --set adservice.image.tag=$IMAGE_TAG \
+        --set cartservice.image.tag=$IMAGE_TAG \
+        --set checkoutservice.image.tag=$IMAGE_TAG \
+        --set currencyservice.image.tag=$IMAGE_TAG \
+        --set emailservice.image.tag=$IMAGE_TAG \
+        --set frontend.image.tag=$IMAGE_TAG \
+        --set paymentservice.image.tag=$IMAGE_TAG \
+        --set recommendationservice.image.tag=$IMAGE_TAG \
+        --set shippingservice.image.tag=$IMAGE_TAG \
+        --set productcatalogservice.image.tag=$IMAGE_TAG \
+        --set shoppingassistantservice.image.tag=$IMAGE_TAG
+
+  tags:
+    - master # Run deploy only on runners labeled master
+  retry: 1 # Retry deploy job once on failure

@@ -1,0 +1,80 @@
+imagePullSecrets: [] # Optional pull secrets for private registry
+nameOverride: "" # Override chart name
+fullnameOverride: "" # Override full release name
+
+ingress:
+  enabled: false # Ingress disabled by default
+  className: "" # Use default ingress class if enabled
+  annotations: {} # Ingress annotations placeholder
+  hosts: [] # Hosts list placeholder
+  tls: [] # TLS configuration placeholder
+
+httpRoute:
+  enabled: false # Gateway API HTTPRoute disabled
+
+serviceAccount:
+  create: true # Create dedicated service account
+  automount: true # Mount API credentials into pods
+  annotations: {} # Extra service account annotations
+  name: "" # Custom SA name override
+replicaCount: 1 # Default replica count
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/checkoutservice # Registry path for the container
+  pullPolicy: IfNotPresent # Pull only if image not cached
+  tag: "latest" # Default image tag updated by CI
+
+service:
+  type: ClusterIP # Internal-only Kubernetes service
+  port: 5050 # Checkout API port
+
+env:
+  - name: PORT # Container listen port
+    value: "5050" # Matches service port
+  - name: PRODUCT_CATALOG_SERVICE_ADDR # Dependency: catalog service
+    value: "productcatalogservice:3550" # Service DNS + port
+  - name: SHIPPING_SERVICE_ADDR # Dependency: shipping service
+    value: "shippingservice:50051" # Service DNS + port
+  - name: PAYMENT_SERVICE_ADDR # Dependency: payment service
+    value: "paymentservice:50051" # Service DNS + port
+  - name: EMAIL_SERVICE_ADDR # Dependency: email service
+    value: "emailservice:5000" # Service DNS + port
+  - name: CURRENCY_SERVICE_ADDR # Dependency: currency service
+    value: "currencyservice:7000" # Service DNS + port
+  - name: CART_SERVICE_ADDR # Dependency: cart service
+    value: "cartservice:7070" # Service DNS + port
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU reservation
+    memory: 128Mi # Minimum memory reservation
+  limits:
+    cpu: 200m # CPU cap
+    memory: 256Mi # Memory cap
+podAnnotations: {} # Optional pod annotations
+podLabels:
+  app: checkoutservice # Selector/observability label
+
+podSecurityContext: {} # Pod security context placeholder
+
+securityContext: {} # Container security context placeholder
+livenessProbe:
+  httpGet:
+    path: / # Health endpoint path
+    port: http # Named port reference
+readinessProbe:
+  httpGet:
+    path: / # Ready endpoint path
+    port: http
+
+autoscaling:
+  enabled: false # HPA disabled; rely on replicaCount
+  minReplicas: 1 # Minimum replicas if HPA enabled
+  maxReplicas: 100 # Maximum replicas if HPA enabled
+  targetCPUUtilizationPercentage: 80 # CPU target for scaling
+
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra mounts placeholder
+nodeSelector: {} # Optional node selection rules
+tolerations: [] # Optional tolerations
+affinity: {} # Affinity rules placeholder

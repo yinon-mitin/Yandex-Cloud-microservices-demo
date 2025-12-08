@@ -1,0 +1,30 @@
+/keys/
+
+# Local development
+/tmp/minikube-ip.txt
+/tmp/kind-config.yaml
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+.terraform/
+.terraform.lock.hcl
+
+# Helm
+charts/
+*.tgz

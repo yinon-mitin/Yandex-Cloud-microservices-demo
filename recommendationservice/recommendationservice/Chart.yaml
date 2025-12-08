@@ -1,0 +1,6 @@
+apiVersion: v2 # Helm chart schema version
+name: recommendationservice # Chart name
+description: A Helm chart for Recommendation Service # Brief chart summary
+type: application # Deployable chart type
+version: 0.1.0 # Chart package version
+appVersion: "1.16.0" # App container version metadata

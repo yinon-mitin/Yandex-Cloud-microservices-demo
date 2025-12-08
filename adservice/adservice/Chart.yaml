@@ -1,0 +1,6 @@
+apiVersion: v2 # Use Helm v2+ chart schema
+name: adservice # Release name for the ad service
+description: A Helm chart for Ad Service # Human-friendly summary shown in registries
+type: application # Application chart (not a library)
+version: 0.1.0 # Chart version used for dependency resolution
+appVersion: "1.16.0" # Underlying app version exposed to Helm users

@@ -1,0 +1,24 @@
+replicaCount: 1 # Run a single adservice pod by default
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/adservice # Container registry path
+  pullPolicy: IfNotPresent # Avoid pulling if image already cached
+  tag: "latest" # Overrideable image tag set by pipeline
+
+service:
+  type: ClusterIP # Internal-only service exposure
+  port: 9555 # gRPC/HTTP port exposed by the container
+
+env:
+  - name: PORT # Port environment variable consumed by the app
+    value: "9555" # Matches container listening port
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU guaranteed
+    memory: 128Mi # Minimum memory guaranteed
+  limits:
+    cpu: 200m # Hard CPU ceiling
+    memory: 256Mi # Hard memory ceiling
+podLabels:
+  app: adservice # Label used for selectors and observability

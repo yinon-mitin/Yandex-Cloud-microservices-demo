@@ -1,0 +1,76 @@
+imagePullSecrets: [] # Optional pull secrets for private registries
+# This is to override the chart name.
+nameOverride: "" # Custom short name override
+fullnameOverride: "" # Custom full release name override
+
+ingress:
+  enabled: false # Disable ingress exposure by default
+  className: "" # Use default ingress controller if enabled
+  annotations: {} # Placeholder for ingress annotations
+  hosts: [] # Host definitions left empty
+  tls: [] # TLS configuration placeholder
+
+httpRoute:
+  enabled: false # Disable Gateway API HTTPRoute
+
+
+serviceAccount:
+  create: true # Create service account for this pod
+  automount: true # Mount service account token
+  annotations: {} # Additional SA annotations
+  name: "" # Custom SA name
+replicaCount: 1 # Run one replica by default
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/currencyservice # Registry path for the image
+  pullPolicy: IfNotPresent # Pull only when not cached
+  tag: "latest" # Default tag overridden by CI
+
+service:
+  type: ClusterIP # Expose inside the cluster only
+  port: 7000 # Port currency service listens on
+
+env:
+  - name: PORT # Container listen port variable
+    value: "7000" # Matches service port
+  - name: DISABLE_PROFILER # Toggle profiling
+    value: "true" # Disable profiler to reduce overhead
+  - name: DISABLE_TRACING # Toggle tracing
+    value: "true" # Disable tracing by default
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU reservation
+    memory: 128Mi # Minimum memory reservation
+  limits:
+    cpu: 200m # CPU usage cap
+    memory: 256Mi # Memory usage cap
+podAnnotations: {} # Optional pod annotations
+podLabels:
+  app: currencyservice # Selector/observability label
+
+podSecurityContext: {} # Pod-level security options placeholder
+
+securityContext: {} # Container security options placeholder
+livenessProbe:
+  httpGet:
+    path: / # HTTP path for liveness
+    port: http # Named port reference
+readinessProbe:
+  httpGet:
+    path: / # HTTP path for readiness
+    port: http
+
+autoscaling:
+  enabled: false # HPA disabled
+  minReplicas: 1 # Minimum replicas if HPA enabled
+  maxReplicas: 100 # Maximum replicas if HPA enabled
+  targetCPUUtilizationPercentage: 80 # CPU target for scaling
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra mounts placeholder
+
+nodeSelector: {} # Optional node selection rules
+
+tolerations: [] # Optional tolerations
+
+affinity: {} # Affinity rules placeholder

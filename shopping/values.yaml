@@ -1,0 +1,116 @@
+global:
+  security:
+    allowInsecureImages: true # Allow pulling unsigned demo images
+adservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/adservice # Default registry path
+    tag: "latest" # Tag overridden by CI to build SHA
+  ingress:
+    enabled: false # Do not expose ad service externally
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: adviservice # Override release name for backward compatibility
+cartservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/cartservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Internal only
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: cartservice # Use predictable service name
+checkoutservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/checkoutservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Not exposed externally
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: checkoutservice # Stable name override
+currencyservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/currencyservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Internal only
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: currencyservice # Stable name override
+emailservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/emailservice # Registry path
+    tag: "v0-amd64" # Default tag for email service
+  ingress:
+    enabled: false # Keep service internal
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: emailservice # Stable name override
+frontend:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/frontend # Registry path
+    tag: "v0-amd64" # Default frontend tag
+  fullnameOverride: frontend # Stable name override for ingress
+  podLabels:
+    app: frontend # Selector label for services
+  service:
+    selector:
+      app: frontend # Match pods by label
+paymentservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/paymentservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Keep internal
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: paymentservice # Stable name override
+productcatalogservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/productcatalogservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Internal only
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: productcatalogservice # Stable name override
+recommendationservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/recommendationservice # Registry path
+    tag: "v0-amd64" # Default tag for recommendation service
+  ingress:
+    enabled: false # Internal only
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: recommendationservice # Stable name override
+shippingservice:
+  image:
+    repository: cr.yandex/crp154gk455crm9814sr/shippingservice # Registry path
+    tag: "latest" # Tag placeholder
+  ingress:
+    enabled: false # Not exposed externally
+  httpRoute:
+    enabled: false # Gateway API disabled
+  fullnameOverride: shippingservice # Stable name override
+#shoppingassistantservice:
+#  image:
+#    repository: cr.yandex/crp154gk455crm9814sr/shoppingassistantservice # Registry path
+#    tag: "v1-amd64"  # Tag placeholder
+#  ingress:
+#    enabled: false  # Not exposed externally
+#  httpRoute:
+#    enabled: false  # Gateway API disabled
+#  fullnameOverride: shoppingassistantservice  # Stable name override
+
+redis:
+  image:
+    registry: cr.yandex # Registry host used for redis image
+    repository: crp154gk455crm9814sr/redis # Repository path
+    tag: "amd64" # Static tag for redis build
+  architecture: standalone # Single-node redis for demo
+  auth:
+    enabled: false # Disable auth for demo simplicity
+  fullnameOverride: redis # Stable name override
+  master:
+    persistence:
+      enabled: false # Disable persistence; ephemeral for demo

@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (ignored by git) and fill in environment-specific values.
+
+# Optional when using YC_TOKEN env var.
+yandex_token = "<yc-oauth-token>" # OAuth token alternative to service account
+service_account_key_file = "<path-to-sa-key-json>" # Local SA key path used when token absent
+
+# Set to your Yandex Cloud identifiers (or rely on YC_CLOUD_ID/YC_FOLDER_ID env vars for the provider).
+cloud_id   = "<yc-cloud-id>" # Cloud ID that owns the project
+folder_id  = "<yc-folder-id>" # Folder containing Kubernetes resources
+zone       = "ru-central1-b" # Zone for cluster control plane and nodes
+node_count = 2 # Desired number of worker nodes

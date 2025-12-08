@@ -1,0 +1,78 @@
+imagePullSecrets: [] # Optional registry credentials secret references
+nameOverride: "" # Override chart name in rendered resources
+fullnameOverride: "" # Override full release name
+
+serviceAccount:
+  create: true # Create a dedicated service account for the pod
+  automount: true # Mount API token into the pod
+  annotations: {} # Extra annotations for the service account
+  name: "" # Custom SA name override
+replicaCount: 1 # Default replica count
+
+ingress:
+  enabled: false # Ingress disabled by default
+  className: "" # Use cluster default ingress class
+  annotations: {} # Extra ingress annotations placeholder
+  hosts: [] # Hosts list left empty for now
+  tls: [] # TLS configuration placeholder
+
+httpRoute:
+  enabled: false # Disable Gateway API HTTPRoute by default
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/recommendationservice # Container image path
+  pullPolicy: Always # Always pull to pick up fresh pipeline builds
+  tag: "latest" # Default tag; override during deploy for immutability
+  #tag: "v0-amd64" # Example pinned tag for offline use
+
+service:
+  type: ClusterIP # Internal-only Kubernetes service
+  port: 8080 # Application listen port
+
+env:
+  - name: PORT # Port env var consumed by the service
+    value: "8080" # Matches service port
+  - name: PRODUCT_CATALOG_SERVICE_ADDR # Upstream dependency endpoint
+    value: "productcatalogservice:3550" # Internal DNS and port for catalog service
+  - name: DISABLE_PROFILER # Toggle app profiler
+    value: "1" # Disable profiler to reduce overhead
+  - name: DISABLE_TRACING # Toggle tracing client
+    value: "1" # Disable tracing by default
+
+resources:
+  requests:
+    cpu: 100m # Guaranteed CPU request
+    memory: 128Mi # Guaranteed memory request
+  limits:
+    cpu: 200m # CPU cap
+    memory: 256Mi # Memory cap
+podAnnotations: {} # Optional pod annotations (e.g., sidecars)
+podLabels:
+  app: recommendationservice # Common label for selectors/monitoring
+
+podSecurityContext: {} # Pod-level security defaults left empty
+
+securityContext: {} # Container security defaults left empty
+
+livenessProbe:
+  httpGet:
+    path: / # Basic probe hits root path
+    port: http # Named port resolved from Service template
+readinessProbe:
+  httpGet:
+    path: / # Same endpoint for readiness checks
+    port: http
+
+autoscaling:
+  enabled: false # HPA disabled; relies on replicaCount
+  minReplicas: 1 # Lower bound when HPA enabled
+  maxReplicas: 100 # Upper bound to prevent runaway scaling
+  targetCPUUtilizationPercentage: 80 # CPU target for HPA decisions
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra volume mounts placeholder
+
+nodeSelector: {} # Optional node selection constraints
+
+tolerations: [] # Optional tolerations for taints
+
+affinity: {} # Affinity/anti-affinity rules placeholder

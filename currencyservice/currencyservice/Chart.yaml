@@ -1,0 +1,6 @@
+apiVersion: v2 # Helm chart schema version
+name: currencyservice # Chart name
+description: A Helm chart for Currency Service # Brief summary for the service
+type: application # Deployable application chart
+version: 0.1.0 # Chart release version
+appVersion: "1.16.0" # Upstream app version metadata

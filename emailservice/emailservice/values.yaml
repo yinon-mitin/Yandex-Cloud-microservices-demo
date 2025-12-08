@@ -1,0 +1,73 @@
+imagePullSecrets: [] # Optional pull secrets for registry
+nameOverride: "" # Override chart name
+fullnameOverride: "" # Override full release name
+
+serviceAccount:
+  create: true # Create dedicated service account
+  automount: true # Mount API token into pods
+  annotations: {} # Extra service account annotations
+  name: "" # Custom SA name override
+replicaCount: 1 # Default replica count
+
+ingress:
+  enabled: false # Ingress disabled by default
+  className: "" # Use default ingress class if enabled
+  annotations: {} # Ingress annotations placeholder
+  hosts: [] # Host list placeholder
+  tls: [] # TLS configuration placeholder
+
+httpRoute:
+  enabled: false # Gateway API HTTPRoute disabled
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/emailservice # Registry path for image
+  pullPolicy: Always # Always pull to ensure freshest build
+  tag: "latest" # Default tag overridden by CI
+  #tag: "v0-amd64" # Example pinned tag
+
+service:
+  type: ClusterIP # Internal cluster service
+  port: 8080 # Email service HTTP port
+
+env:
+  - name: PORT # Listen port env var
+    value: "8080" # Matches service port
+  - name: DISABLE_PROFILER # Toggle profiling
+    value: "true" # Disable profiler by default
+  - name: DISABLE_TRACING # Toggle tracing
+    value: "true" # Disable tracing by default
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU reservation
+    memory: 128Mi # Minimum memory reservation
+  limits:
+    cpu: 200m # CPU cap
+    memory: 256Mi # Memory cap
+podAnnotations: {} # Optional pod annotations
+podLabels:
+  app: emailservice # Selector/observability label
+
+podSecurityContext: {} # Pod security context placeholder
+
+securityContext: {} # Container security context placeholder
+livenessProbe:
+  httpGet:
+    path: / # Health endpoint path
+    port: http # Named port reference
+readinessProbe:
+  httpGet:
+    path: / # Ready endpoint path
+    port: http
+
+autoscaling:
+  enabled: false # HPA disabled; rely on replicaCount
+  minReplicas: 1 # Minimum replicas if HPA enabled
+  maxReplicas: 100 # Maximum replicas if HPA enabled
+  targetCPUUtilizationPercentage: 80 # CPU target for scaling
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra mounts placeholder
+
+nodeSelector: {} # Optional node selection rules
+
+affinity: {} # Affinity/anti-affinity rules placeholder

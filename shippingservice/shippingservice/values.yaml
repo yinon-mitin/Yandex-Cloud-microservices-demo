@@ -1,0 +1,85 @@
+imagePullSecrets: [] # Optional list of image pull secrets
+nameOverride: "" # Override the chart name
+fullnameOverride: "" # Override the full release name
+
+serviceAccount:
+  create: true # Create a dedicated service account
+  automount: true # Mount API credentials into pods
+  annotations: {} # Extra annotations hook
+  name: "" # Custom SA name override
+replicaCount: 1 # Single replica by default
+
+image:
+  repository: cr.yandex/crp154gk455crm9814sr/shippingservice # Image registry reference
+  pullPolicy: IfNotPresent # Pull only when missing locally
+  tag: "latest" # Default tag, CI overrides with build tag
+
+service:
+  type: ClusterIP # Internal Kubernetes service
+  port: 50051 # gRPC port exposed by the service
+
+env:
+  - name: PORT # Port env var consumed by the app
+    value: "50051" # Matches service port
+
+resources:
+  requests:
+    cpu: 100m # Minimum CPU reservation
+    memory: 128Mi # Minimum memory reservation
+  limits:
+    cpu: 200m # CPU ceiling
+    memory: 256Mi # Memory ceiling
+podAnnotations: {} # Optional pod annotations
+podLabels:
+  app: shippingservice # Label for selectors/telemetry
+
+podSecurityContext: {} # Pod-level security context placeholder
+
+securityContext: {} # Container security overrides placeholder
+ingress:
+  enabled: false # Disable ingress by default
+  className: "" # Use cluster default ingress class if enabled
+  annotations: {} # Ingress annotations placeholder
+  hosts:
+    - host: chart-example.local # Example host to override
+      paths:
+        - path: / # Route all paths to service
+          pathType: ImplementationSpecific # Let controller decide path matching
+  tls: [] # TLS definitions placeholder
+httpRoute:
+  enabled: false # Gateway API HTTPRoute disabled by default
+  annotations: {} # HTTPRoute annotations placeholder
+  parentRefs:
+  - name: gateway # Gateway reference name
+    sectionName: http # Section used on the gateway
+  hostnames:
+  - chart-example.local # Example hostname; override per env
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix # Prefix match for traffic routing
+        value: /headers # Example path prefix
+
+livenessProbe:
+  httpGet:
+    path: / # Health endpoint path
+    port: http # Named port reference
+readinessProbe:
+  httpGet:
+    path: / # Ready endpoint path
+    port: http
+
+autoscaling:
+  enabled: false # Disable HPA; rely on replicaCount
+  minReplicas: 1 # Minimum replicas when HPA enabled
+  maxReplicas: 100 # Maximum replicas for HPA
+  targetCPUUtilizationPercentage: 80 # CPU utilization target
+
+volumes: [] # Extra volumes placeholder
+volumeMounts: [] # Extra mounts placeholder
+
+nodeSelector: {} # Optional node selection rules
+
+tolerations: [] # Optional tolerations for taints
+
+affinity: {} # Affinity/anti-affinity rules placeholder

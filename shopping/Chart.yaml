@@ -1,0 +1,48 @@
+apiVersion: v2 # Helm chart schema version
+name: shopping # Root umbrella chart name
+description: A Helm chart for Kubernetes # Brief chart description
+type: application # Deployable umbrella chart
+version: 0.1.0 # Chart release version
+appVersion: "1.16.0" # Logical app version for umbrella
+
+
+dependencies:
+  - name: adservice # Java ad service subchart
+    version: 0.1.0 # Local chart version
+    repository: "file://../adservice/adservice" # Path to dependency chart
+  - name: cartservice # Cart backend subchart
+    version: 0.1.0
+    repository: "file://../cartservice/cartservice"
+  - name: checkoutservice # Checkout orchestrator subchart
+    version: 0.1.0
+    repository: "file://../checkoutservice/checkoutservice"
+  - name: currencyservice # Currency converter subchart
+    version: 0.1.0
+    repository: "file://../currencyservice/currencyservice"
+  - name: emailservice # Email notifier subchart
+    version: 0.1.0
+    repository: "file://../emailservice/emailservice"
+  - name: frontend # Web UI subchart
+    version: 0.1.0
+    repository: "file://../frontend/frontend"
+  - name: paymentservice # Payment processor stub subchart
+    version: 0.1.0
+    repository: "file://../paymentservice/paymentservice"
+  - name: productcatalogservice # Product catalog API subchart
+    version: 0.1.0
+    repository: "file://../productcatalogservice/productcatalogservice"
+  - name: recommendationservice # Recommendation engine subchart
+    version: 0.1.0
+    repository: "file://../recommendationservice/recommendationservice"
+  - name: shippingservice # Shipping quote tracker subchart
+    version: 0.1.0
+    repository: "file://../shippingservice/shippingservice"
+#  - name: shoppingassistantservice # Optional AI assistant subchart
+#    version: 0.1.0
+#    repository: "file://../shoppingassistantservice/shoppingassistantservice"
+#  - name: redis
+#    version: 23.2.12
+#    repository: https://charts.bitnami.com/bitnami
+  - name: nginx # Edge ingress controller bundled for demo
+    version: 22.3.2
+    repository: https://charts.bitnami.com/bitnami

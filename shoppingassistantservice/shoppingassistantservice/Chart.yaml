@@ -1,0 +1,6 @@
+apiVersion: v2 # Helm chart schema version
+name: shoppingassistantservice # Chart name
+description: A Helm chart for Shopping Assistant Service # Purpose of chart
+type: application # Deployable application chart
+version: 0.1.0 # Chart release version
+appVersion: "1.16.0" # Application version metadata
