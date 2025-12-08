@@ -42,7 +42,7 @@ This repo is a fork of Google’s [**Online Boutique**](https://github.com/Googl
 ## Getting started from scratch (manual path)
 1. **Clone the repo**
    ```sh
-   git clone https://github.com/yinon-mitin/microservices-yc-devops inno-project
+   git clone https://github.com/yinon-mitin/Yandex-Cloud-microservices-demo inno-project
    cd inno-project
    ```
 2. **Configure Terraform**
