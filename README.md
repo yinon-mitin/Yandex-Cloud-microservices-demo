@@ -29,7 +29,6 @@ This repo is a fork of Google’s [**Online Boutique**](https://github.com/Googl
   - `backend.tf` configures Object Storage backend.
   - `terraform.tfvars.example` shows required inputs (`cloud_id`, `folder_id`, `zone`, `node_count`, auth options).
 - CI/CD: `.gitlab-ci.yml` builds with `docker buildx`, pushes to YCR, runs Terraform, then `helm upgrade --install`.
-- Keys (sample only, not for production): `keys/*.json`.
 
 ## Prerequisites
 - Yandex Cloud account + Object Storage bucket (for Terraform state), Container Registry, Managed Kubernetes API enabled.
